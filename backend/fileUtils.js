@@ -20,15 +20,23 @@ async function extractText(buffer, contentType) {
 
 async function extractPdfText(buffer) {
   try {
-    const pdf = await pdfParse(buffer);
+    // Convert buffer to Uint8Array for pdfjs-dist
+    const data = new Uint8Array(buffer);
+    const loadingTask = pdfParse.getDocument(data);
+    const pdf = await loadingTask.promise;
     let text = '';
-    for (let i = 1; i <= pdf.numpages; i++) {
+    
+    for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
-      text += textContent.items.map(item => item.str).join(' ') + '\n';
+      // Join items with space, then add newline for page
+      const pageText = textContent.items.map(item => item.str).join(' ');
+      text += pageText + '\n';
     }
+    
     return text;
   } catch (error) {
+    console.error('PDF Extraction Error:', error);
     throw new Error(`PDF extraction failed: ${error.message}`);
   }
 }
