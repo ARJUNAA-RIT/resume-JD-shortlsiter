@@ -71,11 +71,15 @@ app.post('/resumes', upload.array('files'), async (req, res) => {
     const existingNames = memory.resumes.map(r => r.name);
 
     for (const file of files) {
+      console.log(`Processing file: ${file.originalname}, Type: ${file.mimetype}, Size: ${file.size}`);
+
       if (existingNames.includes(file.originalname)) {
+        console.log(`Skipping duplicate: ${file.originalname}`);
         continue; // Skip duplicates
       }
 
       const text = await extractText(file.buffer, file.mimetype);
+      console.log(`Extracted text length for ${file.originalname}: ${text.length}`);
 
       if (text.trim()) {
         memory.resumes.push({
@@ -85,6 +89,8 @@ app.post('/resumes', upload.array('files'), async (req, res) => {
           content_type: file.mimetype
         });
         newCount++;
+      } else {
+        console.warn(`Text extraction resulted in empty string for: ${file.originalname}`);
       }
     }
 
