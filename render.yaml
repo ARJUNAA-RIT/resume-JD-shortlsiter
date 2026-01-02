@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: resume-ats-backend
+    runtime: node
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8000
+    plan: free

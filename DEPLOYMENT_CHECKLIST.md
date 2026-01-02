@@ -1,106 +1,106 @@
-# Vercel Deployment Checklist
+# Separate Deployment Checklist
 
-## Before Deploying
+## Frontend on Vercel + Backend on Render (EASIEST)
 
-- [ ] Code pushed to GitHub: https://github.com/ARJUNAA-RIT/resume-JD-shortlsiter
-- [ ] All files committed and pushed
-
-## Step-by-Step Deployment
-
-### 1. Go to Vercel Dashboard
-- Visit: https://vercel.com/dashboard
-- Sign in with GitHub account
-
-### 2. Import Project
-- Click "Add New..." → "Project"
-- Select repository: `resume-JD-shortlsiter`
-- Click "Import"
-
-### 3. Configure Project
-In the "Configure Project" screen:
-- **Root Directory**: Leave as default (.) ← IMPORTANT
-- **Build Command**: `cd frontend && npm install && npm run build`
-- **Output Directory**: `frontend/build`
-- **Install Command**: `npm install`
-
-### 4. Set Environment Variables
-- Click "Environment Variables"
-- Add variable:
-  ```
-  Name:  REACT_APP_API_URL
-  Value: https://your-vercel-project.vercel.app
-  ```
-  (Replace `your-vercel-project` with your actual Vercel project name)
-
-### 5. Deploy
-- Click "Deploy"
-- Wait for build to complete (3-5 minutes)
-
-## After Deployment
-
-### 6. Get Your URL
-- Vercel gives you a URL like: `https://your-vercel-project.vercel.app`
-- This is your **working application link**
-
-### 7. Update Environment Variable
-- Go to Project Settings → Environment Variables
-- Update `REACT_APP_API_URL` with the actual Vercel URL
-- **Redeploy** from the Deployments tab
-
-### 8. Test Application
-- Visit your Vercel URL
-- Upload a job description
-- Upload resumes
-- Click "Match Resumes"
-- Verify it works!
-
-## Troubleshooting
-
-### Error: "react api is not exist"
-**Solution:**
-- Go to Vercel Project Settings
-- Check Environment Variables section
-- Make sure `REACT_APP_API_URL` is set correctly
-- Redeploy
-
-### Error: "Cannot POST /jd"
-**Solution:**
-- The environment variable must have the correct URL
-- Format should be: `https://your-vercel-project.vercel.app`
-- No `/api` suffix needed
-
-### Error: "Module not found" during build
-**Solution:**
-- Check that Root Directory is set to `.` (current directory)
-- Ensure `package.json` files exist in both `frontend/` and `backend/`
-
-### Slow first request (5-10 seconds)
-**This is normal** - the ML model loads on first request. Subsequent requests are faster.
-
-## Important Notes
-
-⚠️ **Data Persistence:**
-- Vercel is stateless - data resets when server restarts
-- This is fine for testing/demo purposes
-- For production, add a database (MongoDB, PostgreSQL, etc.)
-
-⚠️ **Free Tier Limitations:**
-- 6MB function size limit
-- 60-second function timeout
-- Memory: 1024MB
-
-## Support
-
-If deployment fails:
-1. Check Vercel Logs: Project → Deployments → Click deployment → View Logs
-2. Look for error messages
-3. Common issues:
-   - Missing `REACT_APP_API_URL` environment variable
-   - Wrong Root Directory setting
-   - npm packages not installed
+See detailed guide: [SEPARATE_DEPLOYMENT.md](SEPARATE_DEPLOYMENT.md)
 
 ---
 
-**Your Project:**
-- GitHub: https://github.com/ARJUNAA-RIT/resume-JD-shortlsiter
-- Vercel: https://your-vercel-project.vercel.app (after deployment)
+## Quick Checklist
+
+### Backend Deployment (Render.com)
+- [ ] Account created on render.com
+- [ ] Repository connected with GitHub
+- [ ] Web Service created with:
+  - Root Directory: `backend`
+  - Build Command: `npm install`
+  - Start Command: `npm start`
+- [ ] Backend deployed and running
+- [ ] Backend URL copied: `https://your-backend.onrender.com`
+- [ ] Health check passing: `GET https://your-backend.onrender.com/`
+
+### Frontend Deployment (Vercel)
+- [ ] Account created on vercel.com
+- [ ] Repository imported from GitHub
+- [ ] Root Directory set to: `frontend`
+- [ ] Environment Variable added:
+  ```
+  REACT_APP_API_URL = https://your-backend.onrender.com
+  ```
+- [ ] Frontend deployed successfully
+- [ ] Frontend URL obtained: `https://your-project.vercel.app`
+
+### Testing
+- [ ] Visit frontend URL
+- [ ] Upload job description
+- [ ] Upload resumes
+- [ ] Match resumes
+- [ ] Results appear successfully
+
+---
+
+## Step-by-Step
+
+### 1. Deploy Backend to Render (5 minutes)
+
+```
+1. Go to render.com → New+ → Web Service
+2. Select your GitHub repo
+3. Set Root Directory: backend
+4. Build: npm install
+5. Start: npm start
+6. Click Deploy
+7. Copy the URL when done
+```
+
+### 2. Deploy Frontend to Vercel (5 minutes)
+
+```
+1. Go to vercel.com → Add Project
+2. Select your GitHub repo
+3. Set Root Directory: frontend
+4. Add Environment Variable:
+   REACT_APP_API_URL = [paste backend URL from step 1]
+5. Click Deploy
+6. Wait for build to complete
+```
+
+### 3. Test & Share
+
+```
+1. Visit your Vercel URL
+2. Test the application
+3. Share Vercel URL with users
+```
+
+---
+
+## Advantages of Separate Deployment
+
+✅ **Simpler setup** - Each platform does one thing  
+✅ **Better scaling** - Scale frontend and backend independently  
+✅ **Clearer debugging** - Easier to find issues  
+✅ **Free tier friendly** - Both platforms have good free tiers  
+✅ **Production ready** - Standard industry practice  
+
+---
+
+## Common Issues
+
+| Issue | Solution |
+|-------|----------|
+| "Cannot POST /jd" | Check environment variable and backend URL |
+| Slow first request | Normal - backend model loads on first use |
+| Backend appears offline | Render free tier sleeps after 15 min inactivity |
+| "Module not found" | Ensure Root Directory is correct in settings |
+
+---
+
+## Your URLs After Deployment
+
+**Frontend:** https://your-project.vercel.app  
+**Backend:** https://your-backend.onrender.com  
+**GitHub:** https://github.com/ARJUNAA-RIT/resume-JD-shortlsiter
+
+**Share only the Frontend URL** with others!
+
