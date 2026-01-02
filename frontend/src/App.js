@@ -21,7 +21,7 @@ function App() {
 
   const uploadJD = async () => {
     clearMessages();
-    
+
     if (!jdText && !jdFile) {
       setError("Please enter JD text or upload a JD file");
       return;
@@ -35,11 +35,9 @@ function App() {
       } else {
         form.append("text", jdText);
       }
-      
-      const response = await api.post("/jd", form, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      
+
+      const response = await api.post("/jd", form);
+
       setSuccess("Job description saved successfully!");
       setJdLoaded(true);
       setJdText("");
@@ -53,7 +51,7 @@ function App() {
 
   const uploadResumes = async () => {
     clearMessages();
-    
+
     if (resumes.length === 0) {
       setError("Please select at least one resume file");
       return;
@@ -63,11 +61,9 @@ function App() {
     try {
       const form = new FormData();
       resumes.forEach(r => form.append("files", r));
-      
-      const response = await api.post("/resumes", form, {
-        headers: { "Content-Type": "multipart/form-data" }
-      });
-      
+
+      const response = await api.post("/resumes", form);
+
       setSuccess(`${response.data.count} total resume(s) loaded`);
       setResumesLoaded(response.data.count);
       setResumes([]);
@@ -80,12 +76,12 @@ function App() {
 
   const runMatch = async () => {
     clearMessages();
-    
+
     if (!jdLoaded) {
       setError("Please upload a job description first");
       return;
     }
-    
+
     if (resumesLoaded === 0) {
       setError("Please upload resumes first");
       return;
@@ -96,7 +92,7 @@ function App() {
       const response = await api.get("/match", {
         params: { threshold }
       });
-      
+
       setResults(response.data.selected || []);
       setSuccess(`Matching complete: ${response.data.count} candidate(s) matched with threshold ${threshold}%`);
     } catch (err) {
@@ -270,8 +266,8 @@ function App() {
                       </div>
                     )}
                   </div>
-                  <button 
-                    onClick={() => downloadResume(r.file)} 
+                  <button
+                    onClick={() => downloadResume(r.file)}
                     className="button button-download"
                   >
                     ⬇️ Download Resume
