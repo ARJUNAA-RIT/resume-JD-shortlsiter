@@ -2,8 +2,9 @@
 const { env, pipeline } = require('@xenova/transformers');
 
 // Disable remote model downloading, use local only
-env.allowLocalModels = true;
-env.allowRemoteModels = false;
+// Enable remote model downloading for dynamic semantic matching
+env.allowLocalModels = false;
+env.allowRemoteModels = true;
 
 let embeddingModel = null;
 
