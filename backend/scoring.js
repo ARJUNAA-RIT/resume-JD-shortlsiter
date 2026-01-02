@@ -67,6 +67,21 @@ function calculateSemanticCoverage(jdVectors, resumeVectors) {
   return totalMaxSim / jdVectors.length;
 }
 
+// Calibrate raw vector similarity to human-perceived percentage
+// Raw 0.57 -> Human 86%
+function calibrateScore(raw) {
+  // Threshold below which text is considered irrelevant
+  const threshold = 0.2;
+  if (raw < threshold) return 0.1;
+
+  // Scale the remaining range [0.2, 1.0] to [0.0, 1.0] with a boost
+  // Formula: (raw - 0.2) * 2.3
+  // Example: (0.57 - 0.2) * 2.3 = 0.37 * 2.3 = 0.851 (85%)
+  const calibrated = (raw - threshold) * 2.3;
+
+  return Math.min(1.0, Math.max(0.1, calibrated));
+}
+
 async function combinedScore(jdText, resumeText) {
   const jd = advancedNormalize(jdText);
   const rs = advancedNormalize(resumeText);
@@ -87,7 +102,10 @@ async function combinedScore(jdText, resumeText) {
 
   // 3. Semantic Coverage Score (The "GPT-Level" Accuracy)
   // This checks if *every* requirement in JD has a match in Resume
-  const coverageScore = calculateSemanticCoverage(jdVectors, resumeVectors);
+  const rawCoverage = calculateSemanticCoverage(jdVectors, resumeVectors);
+
+  // Calibrate the score to match human expectations (GPT-level)
+  const coverageScore = calibrateScore(rawCoverage);
 
   // 4. Keyword Score (Backup for specific terms)
   const tfidf = tfidfKeywordScore(jd, rs);
