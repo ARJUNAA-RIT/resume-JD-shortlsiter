@@ -18,11 +18,32 @@ async function initializeModel() {
 async function embed(text) {
   try {
     const model = await initializeModel();
+    // Handle batch embedding (array of strings)
+    if (Array.isArray(text)) {
+      if (text.length === 0) return [];
+      const output = await model(text, { pooling: 'mean', normalize: true });
+      // output.tolist() returns a nested array [batch_size, embedding_dim]
+      if (output.tolist) {
+        return output.tolist();
+      }
+      // Fallback if tolist() is not available (flattened Float32Array)
+      const embeddings = [];
+      const dims = output.dims ? output.dims[1] : 384; // Assuming [N, 384]
+      for (let i = 0; i < text.length; i++) {
+        embeddings.push(Array.from(output.data.slice(i * dims, (i + 1) * dims)));
+      }
+      return embeddings;
+    }
+
+    // Handle single string
     const output = await model(text, { pooling: 'mean', normalize: true });
     return Array.from(output.data);
   } catch (error) {
     console.error('Embedding error:', error);
-    // Return a dummy embedding if model fails (to prevent crashes)
+    // Return dummy data on error
+    if (Array.isArray(text)) {
+      return text.map(() => new Array(384).fill(0.1));
+    }
     return new Array(384).fill(0.1);
   }
 }

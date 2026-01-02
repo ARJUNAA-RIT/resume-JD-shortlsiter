@@ -9,49 +9,6 @@ function advancedNormalize(text) {
   return text.trim();
 }
 
-function extractYearsExperience(text) {
-  const matches = text.toLowerCase().match(/(\d+)\+?\s*years?/g);
-  if (matches) {
-    const years = matches.map(m => parseInt(m));
-    return Math.max(...years);
-  }
-  return 0;
-}
-
-function educationScore(jdText, resumeText) {
-  const EDUCATION_KEYWORDS = {
-    'phd': 3, 'masters': 2.5, 'mba': 2.5,
-    'bachelor': 2, 'btech': 2, 'bsc': 2,
-    'diploma': 1, 'certification': 1.5
-  };
-
-  const jdTexts = jdText.toLowerCase();
-  const resumeTexts = resumeText.toLowerCase();
-
-  const jdEdu = Math.max(...Object.entries(EDUCATION_KEYWORDS)
-    .filter(([key]) => jdTexts.includes(key))
-    .map(([, weight]) => weight), 0);
-
-  const resumeEdu = Math.max(...Object.entries(EDUCATION_KEYWORDS)
-    .filter(([key]) => resumeTexts.includes(key))
-    .map(([, weight]) => weight), 0);
-
-  if (jdEdu === 0) return 0.8;
-  if (resumeEdu >= jdEdu) return 1.0;
-  if (resumeEdu >= jdEdu * 0.8) return 0.8;
-  return 0.6;
-}
-
-function experienceScore(jdText, resumeText) {
-  const jdExp = extractYearsExperience(jdText);
-  const resumeExp = extractYearsExperience(resumeText);
-
-  if (jdExp === 0) return 0.8;
-  if (resumeExp >= jdExp) return 1.0;
-  if (resumeExp >= jdExp * 0.7) return 0.85;
-  return Math.max(0.5, resumeExp / jdExp);
-}
-
 function cosineSimilarity(a, b) {
   const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
   const normA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
@@ -79,37 +36,73 @@ function tfidfKeywordScore(jd, resume) {
   }
 }
 
+// Helper to split text into meaningful chunks (sentences/clauses)
+function splitTextIntoChunks(text) {
+  if (!text) return [];
+  // Split by newlines, periods, or semicolons to get distinct thoughts
+  // Filter out short segments (< 20 chars) to avoid noise
+  return text
+    .split(/[\n\.;]+/)
+    .map(chunk => chunk.trim())
+    .filter(chunk => chunk.length > 20);
+}
+
+// Calculate how well the Resume covers the JD requirements
+// For each JD chunk, find the BEST matching Resume chunk.
+// Final score is the average of these best matches.
+function calculateSemanticCoverage(jdVectors, resumeVectors) {
+  if (!jdVectors.length || !resumeVectors.length) return 0;
+
+  let totalMaxSim = 0;
+
+  for (const jdVec of jdVectors) {
+    let maxSim = 0;
+    for (const resVec of resumeVectors) {
+      const sim = cosineSimilarity(jdVec, resVec);
+      if (sim > maxSim) maxSim = sim;
+    }
+    totalMaxSim += maxSim;
+  }
+
+  return totalMaxSim / jdVectors.length;
+}
+
 async function combinedScore(jdText, resumeText) {
   const jd = advancedNormalize(jdText);
   const rs = advancedNormalize(resumeText);
 
-  // Get embeddings
-  const jdEmbed = await embed(jd);
-  const rsEmbed = await embed(rs);
+  // 1. Chunking
+  // We split the JD into "requirements" and Resume into "claims"
+  const jdChunks = splitTextIntoChunks(jdText); // Use original text for chunking to keep punctuation
+  const resumeChunks = splitTextIntoChunks(resumeText);
 
-  // Calculate individual scores
-  const semantic = cosineSimilarity(jdEmbed, rsEmbed);
+  // Fallback if chunking fails (e.g. very short text)
+  if (jdChunks.length === 0) jdChunks.push(jd);
+  if (resumeChunks.length === 0) resumeChunks.push(rs);
+
+  // 2. Batch Embedding
+  // Get vectors for all chunks at once
+  const jdVectors = await embed(jdChunks);
+  const resumeVectors = await embed(resumeChunks);
+
+  // 3. Semantic Coverage Score (The "GPT-Level" Accuracy)
+  // This checks if *every* requirement in JD has a match in Resume
+  const coverageScore = calculateSemanticCoverage(jdVectors, resumeVectors);
+
+  // 4. Keyword Score (Backup for specific terms)
   const tfidf = tfidfKeywordScore(jd, rs);
-  const edu = educationScore(jd, rs);
-  const exp = experienceScore(jd, rs);
 
-  // Dynamic Weighted combination (No hardcoded skills)
-  // 50% Semantic (AI Understanding)
-  // 30% Keywords (Dynamic Term Matching)
-  // 10% Education
-  // 10% Experience
+  // Weighted combination
+  // 90% Semantic Coverage (Pure AI Understanding)
+  // 10% Keywords (Backup)
   const final = (
-    0.50 * semantic +
-    0.30 * tfidf +
-    0.10 * edu +
-    0.10 * exp
+    0.90 * coverageScore +
+    0.10 * tfidf
   );
 
   return {
-    semantic: Math.round(semantic * 100 * 100) / 100,
+    semantic: Math.round(coverageScore * 100 * 100) / 100,
     keywords: Math.round(tfidf * 100 * 100) / 100,
-    education: Math.round(edu * 100 * 100) / 100,
-    experience: Math.round(exp * 100 * 100) / 100,
     final: Math.round(final * 100 * 100) / 100
   };
 }
