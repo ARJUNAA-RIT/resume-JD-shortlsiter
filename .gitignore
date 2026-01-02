@@ -1,0 +1,36 @@
+# Frontend
+node_modules/
+build/
+dist/
+.env.local
+.env.*.local
+npm-debug.log
+yarn-error.log
+
+# Backend
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+.venv
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+.coverage
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+.env
