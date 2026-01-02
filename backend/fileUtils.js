@@ -1,4 +1,4 @@
-const pdfParse = require('pdfjs-dist');
+const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js');
 const mammoth = require('mammoth');
 
 async function extractText(buffer, contentType) {
@@ -22,10 +22,10 @@ async function extractPdfText(buffer) {
   try {
     // Convert buffer to Uint8Array for pdfjs-dist
     const data = new Uint8Array(buffer);
-    const loadingTask = pdfParse.getDocument(data);
+    const loadingTask = pdfjsLib.getDocument(data);
     const pdf = await loadingTask.promise;
     let text = '';
-    
+
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
@@ -33,7 +33,7 @@ async function extractPdfText(buffer) {
       const pageText = textContent.items.map(item => item.str).join(' ');
       text += pageText + '\n';
     }
-    
+
     return text;
   } catch (error) {
     console.error('PDF Extraction Error:', error);
